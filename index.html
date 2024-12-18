@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Buckshot Tracker">
+    <meta name="description"
+        content="A helpful companion app for tracking bullets in Buckshot Roulette. Keep track of real and blank rounds, see probabilities, and improve your gameplay.">
+
+    <!-- Open Graph / Facebook / Discord -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://buckshot.tiny.pm/">
+    <meta property="og:title" content="Buckshot Tracker">
+    <meta property="og:description"
+        content="A helpful companion app for tracking bullets in Buckshot Roulette. Keep track of real and blank rounds, see probabilities, and improve your gameplay.">
+    <meta property="og:image" content="https://buckshot.tiny.pm/banner.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://buckshot.tiny.pm/">
+    <meta property="twitter:title" content="Buckshot Tracker">
+    <meta property="twitter:description"
+        content="A helpful companion app for tracking bullets in Buckshot Roulette. Keep track of real and blank rounds, see probabilities, and improve your gameplay.">
+    <meta property="twitter:image" content="https://buckshot.tiny.pm/banner.png">
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="https://tiny.pm/imgs/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Buckshot Tracker</title>
+    <link rel="stylesheet" href="styles.css?v1.0">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Buckshot Tracker</h1>
+        </div>
+
+        <div class="setup-container" id="setup-container">
+            <div class="setup-input">
+                <label>
+                    BLANKS
+                    <input type="number" id="blank-bullets" min="0" max="8" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="0-8" class="blank-input">
+                </label>
+                <label>
+                    REAL
+                    <input type="number" id="real-bullets" min="0" max="8" inputmode="numeric" pattern="[0-9]*"
+                        placeholder="0-8" class="real-input">
+                </label>
+            </div>
+            <div class="error-message" id="setup-error"></div>
+            <button class="btn btn-real" id="start-game">Start Game</button>
+        </div>
+
+        <div class="game-container" id="game-container">
+            <div class="bullets-display" id="bullets-display">
+                <!-- Bullets will be added here dynamically -->
+            </div>
+
+            <div class="counts">
+                <div class="count-box">
+                    <h3>REAL</h3>
+                    <div class="number" id="real-count">0</div>
+                    <div class="detail" id="real-detail">0 remaining</div>
+                </div>
+                <div class="count-box">
+                    <h3>BLANK</h3>
+                    <div class="number" id="blank-count">0</div>
+                    <div class="detail" id="blank-detail">0 remaining</div>
+                </div>
+                <div class="count-box">
+                    <h3>UNKNOWN</h3>
+                    <div class="number" id="unknown-count">0</div>
+                    <div class="detail" id="unknown-detail">of 0 total</div>
+                </div>
+            </div>
+
+            <div class="probability">
+                <h3>Next Shot Probability</h3>
+                <p id="probability-text">Real: 0% | Blank: 0%</p>
+            </div>
+
+            <button class="reset" id="reset-button">Reset Game</button>
+        </div>
+
+        <div class="bullet-menu" id="bullet-menu">
+            <div class="bullet-menu-buttons">
+                <button class="btn btn-real" id="mark-real">Mark Real</button>
+                <button class="btn btn-blank" id="mark-blank">Mark Blank</button>
+            </div>
+            <div class="bottom-buttons">
+                <button class="btn btn-cancel" id="mark-cancel">Close</button>
+                <button class="btn btn-cancel" id="mark-clear">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BuckshotTracker {
+            constructor() {
+                this.bullets = [];
+                this.maxBullets = 8;
+                this.totalBullets = 0;
+                this.totalReal = 0;
+                this.selectedBulletIndex = -1;
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.setupInputHandlers();
+            }
+
+            initializeElements() {
+                this.setupContainer = document.getElementById('setup-container');
+                this.gameContainer = document.getElementById('game-container');
+                this.bulletMenu = document.getElementById('bullet-menu');
+                this.setupError = document.getElementById('setup-error');
+                this.realCount = document.getElementById('real-count');
+                this.blankCount = document.getElementById('blank-count');
+                this.unknownCount = document.getElementById('unknown-count');
+                this.realDetail = document.getElementById('real-detail');
+                this.blankDetail = document.getElementById('blank-detail');
+                this.unknownDetail = document.getElementById('unknown-detail');
+                this.bulletsDisplay = document.getElementById('bullets-display');
+                this.probabilityText = document.getElementById('probability-text');
+            }
+
+            setupInputHandlers() {
+                const blankInput = document.getElementById('blank-bullets');
+                const realInput = document.getElementById('real-bullets');
+
+                // Auto-focus blank input on load
+                blankInput.focus();
+
+                blankInput.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        realInput.focus();
+                    }
+                });
+
+                realInput.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        this.startGame();
+                    }
+                });
+            }
+
+            initializeEventListeners() {
+                document.getElementById('start-game').addEventListener('click', () => this.startGame());
+                document.getElementById('reset-button').addEventListener('click', () => this.resetGame());
+                document.getElementById('mark-real').addEventListener('click', () => this.markBullet('real'));
+                document.getElementById('mark-blank').addEventListener('click', () => this.markBullet('blank'));
+                document.getElementById('mark-cancel').addEventListener('click', () => this.closeBulletMenu());
+                document.getElementById('mark-clear').addEventListener('click', () => {
+                    if (this.selectedBulletIndex !== -1) {
+                        this.bullets[this.selectedBulletIndex] = null;
+                        this.closeBulletMenu();
+                        this.updateDisplay();
+                    }
+                });
+            }
+
+            startGame() {
+                const blankBullets = parseInt(document.getElementById('blank-bullets').value);
+                const realBullets = parseInt(document.getElementById('real-bullets').value);
+                const totalBullets = blankBullets + realBullets;
+
+                if (totalBullets < 1 || totalBullets > 8) {
+                    this.setupError.textContent = 'Total bullets must be between 1 and 8';
+                    return;
+                }
+
+                this.totalBullets = totalBullets;
+                this.totalReal = realBullets;
+                this.bullets = Array(totalBullets).fill(null);
+
+                this.setupContainer.classList.add('hidden');
+                this.gameContainer.classList.add('active');
+
+                this.updateDisplay();
+            }
+
+
+            markBullet(type) {
+                if (this.selectedBulletIndex === -1) return;
+
+                this.bullets[this.selectedBulletIndex] = type;
+                this.closeBulletMenu();
+                this.updateDisplay();
+            }
+
+            showBulletMenu(index) {
+                this.selectedBulletIndex = index;
+                this.bulletMenu.classList.add('active');
+            }
+
+            closeBulletMenu() {
+                this.selectedBulletIndex = -1;
+                this.bulletMenu.classList.remove('active');
+            }
+
+            updateDisplay() {
+                // Update counts
+                const counts = this.getCounts();
+                const unknownCount = this.bullets.filter(b => b === null).length;
+
+                // Update counts with total/remaining format
+                const totalReal = this.totalReal;
+                const totalBlank = this.totalBullets - this.totalReal;
+
+                this.realCount.textContent = totalReal - counts.real;
+                this.realDetail.textContent = `of ${totalReal} total`;
+
+                this.blankCount.textContent = totalBlank - counts.blank;
+                this.blankDetail.textContent = `of ${totalBlank} total`;
+
+                this.unknownCount.textContent = unknownCount;
+                this.unknownDetail.textContent = `of ${this.totalBullets} total`;
+
+                // Update bullets display
+                this.bulletsDisplay.innerHTML = '';
+                this.bullets.forEach((type, index) => {
+                    const bullet = document.createElement('div');
+                    bullet.className = `bullet ${type ? 'bullet-' + type : 'bullet-unknown'}`;
+                    bullet.textContent = index + 1;
+                    bullet.addEventListener('click', () => this.showBulletMenu(index));
+                    this.bulletsDisplay.appendChild(bullet);
+                });
+
+                // Update probability
+                this.updateProbability();
+            }
+
+            getCounts() {
+                return this.bullets.reduce((acc, type) => {
+                    if (type === 'real') acc.real++;
+                    if (type === 'blank') acc.blank++;
+                    return acc;
+                }, { real: 0, blank: 0 });
+            }
+
+            updateProbability() {
+                const counts = this.getCounts();
+                const unknownCount = this.bullets.filter(b => b === null).length;
+
+                if (unknownCount === 0) {
+                    this.probabilityText.textContent = 'All bullets known';
+                    return;
+                }
+
+                const remainingReal = this.totalReal - counts.real;
+                const realProb = (remainingReal / unknownCount * 100).toFixed(1);
+                const blankProb = (100 - realProb).toFixed(1);
+
+                this.probabilityText.textContent = `Real: ${realProb}% | Blank: ${blankProb}%`;
+            }
+
+            resetGame() {
+                this.bullets = [];
+                this.setupContainer.classList.remove('hidden');
+                this.gameContainer.classList.remove('active');
+                this.closeBulletMenu();
+                this.setupError.textContent = '';
+                // Clear inputs
+                document.getElementById('blank-bullets').value = '';
+                document.getElementById('real-bullets').value = '';
+                // Focus on blank input
+                document.getElementById('blank-bullets').focus();
+            }
+        }
+
+        // Initialize the tracker when the page loads
+        window.addEventListener('load', () => {
+            window.tracker = new BuckshotTracker();
+            // Focus on first input on load
+            document.getElementById('total-bullets').focus();
+        });
+    </script>
+</body>
+
+</html>
