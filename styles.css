@@ -297,3 +297,97 @@ body {
         flex-direction: column;
     }
 }
+
+.wrapper{
+  display: flex;
+  gap: 10px;
+  height: 50px;
+  width: 320px;
+  align-items: center;
+  justify-content: space-evenly;
+  border-radius: 5px;
+  padding-top: 15px;
+  user-select: none;
+}
+
+.wrapper .option{
+  gap: 10px;
+  background: #fff;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: all 0.3s ease;
+}
+
+.wrapper .option .dot{
+  height: 20px;
+  width: 20px;
+  background: #d9d9d9;
+  border-radius: 50%;
+  position: relative;
+}
+
+.wrapper .option.blanks-first .dot::before{
+  background: #4444ff;
+}
+
+.wrapper .option.real-first .dot::before{
+  background: #ff4444;
+}
+
+.wrapper .option .dot::before{
+  position: absolute;
+  content: "";
+  top: 4px;
+  left: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(1.5);
+  transition: all 0.3s ease;
+}
+
+.option span {
+  padding-bottom: 4px;
+}
+
+input[type="radio"]{
+  display: none;
+}
+
+#blanks-first:checked:checked ~ .blanks-first {
+  border-color: #4444ff;
+  background: #4444ff;
+}
+
+#real-first:checked:checked ~ .real-first{
+  border-color: #ff4444;
+  background: #ff4444;
+}
+
+#blanks-first:checked:checked ~ .blanks-first .dot,
+#real-first:checked:checked ~ .real-first .dot{
+  background: #fff;
+}
+
+#blanks-first:checked:checked ~ .blanks-first .dot::before,
+#real-first:checked:checked ~ .real-first .dot::before{
+  opacity: 1;
+  transform: scale(1);
+}
+
+.wrapper .option span{
+  font-size: 20px;
+  color: #808080;
+}
+
+#blanks-first:checked:checked ~ .blanks-first span,
+#real-first:checked:checked ~ .real-first span{
+  color: #fff;
+}
