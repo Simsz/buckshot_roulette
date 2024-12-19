@@ -50,6 +50,18 @@
             </div>
             <div class="error-message" id="setup-error"></div>
             <button class="btn btn-real" id="start-game">Start Game</button>
+            <div class="wrapper input-order-toggle">
+                <input type="radio" name="input-order" id="blanks-first" value="blanks-first">
+                <input type="radio" name="input-order" id="real-first" value="real-first">
+                <label for="blanks-first" class="option blanks-first">
+                    <div class="dot"></div>
+                    <span>Blanks First</span>
+                    </label>
+                <label for="real-first" class="option real-first">
+                    <div class="dot"></div>
+                    <span>Real First</span>
+                </label>
+            </div>
         </div>
 
         <div class="game-container" id="game-container">
@@ -103,9 +115,29 @@
                 this.totalBullets = 0;
                 this.totalReal = 0;
                 this.selectedBulletIndex = -1;
+                this.inputOrder = localStorage.getItem('buckshotInputOrder') || 'blanks-first';
+                this.initializeInputOrder();
                 this.initializeElements();
                 this.initializeEventListeners();
                 this.setupInputHandlers();
+            }
+
+            initializeInputOrder() {
+                const radioButtons = document.querySelectorAll('input[name="input-order"]');
+                
+                radioButtons.forEach(radio => {
+                    if (radio.value === this.inputOrder) {
+                        radio.checked = true;
+                    }
+                    
+                    radio.addEventListener('change', (e) => {
+                        this.inputOrder = e.target.value;
+                        localStorage.setItem('buckshotInputOrder', this.inputOrder);
+                        this.updateInputOrder();
+                    });
+                });
+
+                this.updateInputOrder();
             }
 
             initializeElements() {
@@ -187,7 +219,6 @@
                 this.updateDisplay();
             }
 
-
             markBullet(type) {
                 if (this.selectedBulletIndex === -1) return;
 
@@ -238,6 +269,30 @@
                 this.updateProbability();
             }
 
+            updateInputOrder() {
+                const setupInput = document.querySelector('.setup-input');
+                const blankLabel = document.querySelector('label:has(#blank-bullets)');
+                const realLabel = document.querySelector('label:has(#real-bullets)');
+                
+                // Remove existing labels
+                if (blankLabel && realLabel) {
+                    blankLabel.remove();
+                    realLabel.remove();
+                }
+                
+                // Create new labels in the correct order
+                if (this.inputOrder === 'blanks-first') {
+                    setupInput.appendChild(blankLabel || this.createInputLabel('BLANKS', 'blank-bullets', 'blank-input'));
+                    setupInput.appendChild(realLabel || this.createInputLabel('REAL', 'real-bullets', 'real-input'));
+                } else {
+                    setupInput.appendChild(realLabel || this.createInputLabel('REAL', 'real-bullets', 'real-input'));
+                    setupInput.appendChild(blankLabel || this.createInputLabel('BLANKS', 'blank-bullets', 'blank-input'));
+                }
+
+                // Update focus handling
+                this.setupInputHandlers();
+            }
+
             getCounts() {
                 return this.bullets.reduce((acc, type) => {
                     if (type === 'real') acc.real++;
@@ -260,6 +315,54 @@
                 const blankProb = (100 - realProb).toFixed(1);
 
                 this.probabilityText.textContent = `Real: ${realProb}% | Blank: ${blankProb}%`;
+            }
+
+            createInputLabel(text, id, className) {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                ${text}
+                <input type="number" id="${id}" min="0" max="10" inputmode="numeric" pattern="[0-9]*"
+                    placeholder="0-10" class="${className}">
+                `;
+                return label;
+            }
+
+            setupInputHandlers() {
+                const firstInput = this.inputOrder === 'blanks-first' 
+                ? document.getElementById('blank-bullets')
+                : document.getElementById('real-bullets');
+                
+                const secondInput = this.inputOrder === 'blanks-first'
+                ? document.getElementById('real-bullets')
+                : document.getElementById('blank-bullets');
+
+                // Clear existing input values
+                firstInput.value = '';
+                secondInput.value = '';
+                
+                // Focus first input
+                firstInput.focus();
+
+                // Remove existing listeners
+                firstInput.replaceWith(firstInput.cloneNode(true));
+                secondInput.replaceWith(secondInput.cloneNode(true));
+
+                // Get fresh references after replacing
+                const newFirstInput = document.getElementById(firstInput.id);
+                const newSecondInput = document.getElementById(secondInput.id);
+
+                // Add new listeners
+                newFirstInput.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    newSecondInput.focus();
+                }
+                });
+
+                newSecondInput.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    this.startGame();
+                }
+                });
             }
 
             resetGame() {
