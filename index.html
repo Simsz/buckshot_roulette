@@ -130,6 +130,15 @@
                 // Auto-focus blank input on load
                 blankInput.focus();
 
+                // There's now a possible of max 10 bullets per loadout, that means the player can input, for example.
+                // 10 blanks into the app. However, doing so would render the tracker useless.
+                // We may be able to set e.target.value !== '1' so that it doesn't switch autofocus on input '1'.
+                // This would allow players to set 10 blanks for example.
+                // But that would ruin the UX of this app.
+                // Not to mention, it would be stupid and would TOTALLY defeat the whole purpose of this tracker.
+                // So let's just leave the code be.
+                // Unless of course, Mike Klubnika decides to increase the total bullet count once more... 
+                // As if 10 bullets aren't too much to handle already.
                 blankInput.addEventListener('input', (e) => {
                     if (e.target.value) {
                         realInput.focus();
