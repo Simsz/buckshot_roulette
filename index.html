@@ -99,7 +99,7 @@
         class BuckshotTracker {
             constructor() {
                 this.bullets = [];
-                this.maxBullets = 8;
+                this.maxBullets = 10;
                 this.totalBullets = 0;
                 this.totalReal = 0;
                 this.selectedBulletIndex = -1;
@@ -162,9 +162,9 @@
                 const blankBullets = parseInt(document.getElementById('blank-bullets').value);
                 const realBullets = parseInt(document.getElementById('real-bullets').value);
                 const totalBullets = blankBullets + realBullets;
-
-                if (totalBullets < 1 || totalBullets > 8) {
-                    this.setupError.textContent = 'Total bullets must be between 1 and 8';
+                this.bulletsDisplay.setAttribute('data-bullet-count', totalBullets)
+                if (totalBullets < 1 || totalBullets > this.maxBullets) {
+                    this.setupError.textContent = 'Total bullets must be between 1 and ' + this.maxBullets;
                     return;
                 }
 
