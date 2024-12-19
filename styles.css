@@ -91,15 +91,51 @@ body {
 }
 
 .bullets-display {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: clamp(8px, 2vw, 10px);
     margin-bottom: clamp(15px, 4vw, 20px);
     flex-shrink: 0;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 250px;
+    width: 100%;
+}
+
+/* Single row layout for 1-5 bullets */
+.bullets-display[data-bullet-count="1"],
+.bullets-display[data-bullet-count="2"],
+.bullets-display[data-bullet-count="3"],
+.bullets-display[data-bullet-count="4"],
+.bullets-display[data-bullet-count="5"] {
+    flex-wrap: nowrap;
+}
+
+/* Two row layouts for 6-10 bullets */
+.bullets-display[data-bullet-count="6"] {
+    max-width: 250px;
+}
+
+.bullets-display[data-bullet-count="7"] {
+    max-width: 300px;
+}
+
+.bullets-display[data-bullet-count="8"] {
+    max-width: 320px;
+}
+
+.bullets-display[data-bullet-count="9"] {
+    max-width: 350px;
+}
+
+.bullets-display[data-bullet-count="10"] {
+    max-width: 350px;
 }
 
 .bullet {
     width: 100%;
+    max-width: 60px;
     aspect-ratio: 1;
     border-radius: 50%;
     display: flex;
